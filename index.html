@@ -569,11 +569,9 @@
                         position += chunk.length;
                     }
 
-                    // 解压gzip数据
-                    const decompressed = await this.decompressGzip(allChunks);
-                    
-                    // 解析JSON
-                    this.dictionary = JSON.parse(decompressed);
+                    // 直接解析JSON（无需解压）
+                    const jsonString = new TextDecoder('utf-8').decode(allChunks);
+                    this.dictionary = JSON.parse(jsonString);
                     this.isLoaded = true;
                     
                     const wordCount = Object.keys(this.dictionary).length;
@@ -595,15 +593,6 @@
                         <button onclick="location.reload()" style="margin-top: 10px; padding: 10px 20px; background: #4facfe; color: white; border: none; border-radius: 5px; cursor: pointer;">重试</button>
                     `;
                 }
-            }
-
-            async decompressGzip(data) {
-                // 使用浏览器的CompressionStream API解压
-                const stream = new Response(data).body
-                    .pipeThrough(new DecompressionStream('gzip'));
-                
-                const response = new Response(stream);
-                return await response.text();
             }
 
             async translate(word) {
