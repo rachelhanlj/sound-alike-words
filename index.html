@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>近音词搜索与翻译 - 426万词条完整词典</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 40px 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tab-container {
+            background: #f8f9ff;
+            padding: 0 30px;
+            border-bottom: 2px solid #e0e7ff;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 0;
+        }
+
+        .tab {
+            padding: 20px 30px;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+            text-align: center;
+        }
+
+        .tab:hover {
+            color: #4facfe;
+            background: rgba(79, 172, 254, 0.05);
+        }
+
+        .tab.active {
+            color: #4facfe;
+            border-bottom-color: #4facfe;
+            background: rgba(79, 172, 254, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px 30px;
+            background: #f8f9ff;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 20px;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 20px rgba(79, 172, 254, 0.2);
+        }
+
+        .search-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+        }
+
+        .search-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .dictionary-stats {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #2e7d2e;
+        }
+
+        .dictionary-loading {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #1976d2;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .result-section {
+            padding: 0 30px 40px;
+        }
+
+        .phonetic-info {
+            background: #fff;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .phonetic-info h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .phonetic-transcription {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .phonetic-transcription li {
+            list-style: none;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .bold {
+            font-weight: bold;
+            color: #4facfe;
+        }
+
+        .syllables {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #4facfe;
+        }
+
+        .similar-words {
+            display: none;
+        }
+
+        .similar-words h4 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .word-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .word-with-translation {
+            background: white;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .word-with-translation:hover {
+            border-color: #4facfe;
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .main-word {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4facfe;
+            margin-bottom: 10px;
+        }
+
+        .main-translation {
+            font-size: 15px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .no-translation {
+            color: #999;
+            font-style: italic;
+        }
+
+        .translation-result {
+            background: #fff;
+            border: 2px solid #e0e7ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .translation-result h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+
+        .word-info {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .word-entry {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e7ff;
+        }
+
+        .word-entry:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .word-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4facfe;
+            margin-bottom: 8px;
+        }
+
+        .word-translation {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #c33;
+        }
+
+        .example-searches {
+            background: #f0f4ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .example-searches h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .example-tags {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .example-tag {
+            background: white;
+            color: #4facfe;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #4facfe;
+        }
+
+        .example-tag:hover {
+            background: #4facfe;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .word-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 近音词搜索与翻译</h1>
+            <p>Phonetic Word Finder & Translation - 426万词条完整词典</p>
+        </div>
+
+        <div class="tab-container">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('phonetic')">🎵 智能搜索</button>
+                <button class="tab" onclick="switchTab('translation')">📖 词典查询</button>
+            </div>
+        </div>
+
+        <!-- 智能搜索标签页 -->
+        <div id="phonetic-tab" class="tab-content active">
+            <div class="dictionary-loading" id="dictionaryLoading">
+                <strong>📚 词典加载中...</strong>
+                <div id="loadingText">正在从GitHub Release下载426万词条词典...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div id="progressText">准备下载...</div>
+            </div>
+
+            <div class="dictionary-stats" id="dictionaryStats" style="display: none;">
+                <strong>📊 词典状态：</strong>
+                <span id="statsText">词典加载完成 | 词条数: 4,262,770</span>
+            </div>
+
+            <div class="example-searches">
+                <h4>🚀 试试这些示例：</h4>
+                <div class="example-tags">
+                    <span class="example-tag" onclick="searchPhoneticExample('cognitive')">cognitive</span>
+                    <span class="example-tag" onclick="searchPhoneticExample('productive')">productive</span>
+                    <span class="example-tag" onclick="searchPhoneticExample('organization')">organization</span>
+                    <span class="example-tag" onclick="searchPhoneticExample('development')">development</span>
+                    <span class="example-tag" onclick="searchPhoneticExample('communication')">communication</span>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="phoneticSearchInput" placeholder="输入英语单词，获取近音词和翻译..." />
+                <button class="search-btn" onclick="searchSimilarWords()">智能搜索</button>
+            </div>
+
+            <div class="error-message" id="phoneticErrorMessage"></div>
+        </div>
+
+        <!-- 词典查询标签页 -->
+        <div id="translation-tab" class="tab-content">
+            <div class="dictionary-stats">
+                <strong>📊 词典状态：</strong>
+                <span>词条总数: 4,262,770 | 即时查询</span>
+            </div>
+
+            <div class="example-searches">
+                <h4>🚀 试试这些翻译示例：</h4>
+                <div class="example-tags">
+                    <span class="example-tag" onclick="searchTranslationExample('international')">international</span>
+                    <span class="example-tag" onclick="searchTranslationExample('management')">management</span>
+                    <span class="example-tag" onclick="searchTranslationExample('education')">education</span>
+                    <span class="example-tag" onclick="searchTranslationExample('technology')">technology</span>
+                    <span class="example-tag" onclick="searchTranslationExample('government')">government</span>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <input type="text" class="search-input" id="translationSearchInput" placeholder="输入英语单词获取中文翻译..." />
+                <button class="search-btn" onclick="searchTranslation()">查询翻译</button>
+            </div>
+
+            <div class="error-message" id="translationErrorMessage"></div>
+        </div>
+
+        <div class="result-section">
+            <div class="loading" id="loading">
+                <div class="loading-spinner"></div>
+                <p id="loadingText">正在搜索...</p>
+            </div>
+
+            <div class="phonetic-info" id="phoneticInfo">
+                <h3>📝 音标信息</h3>
+                <ul class="phonetic-transcription" id="phoneticTranscription">
+                </ul>
+            </div>
+
+            <div class="similar-words" id="similarWords">
+                <h4>🎯 近音词与翻译：</h4>
+                <div class="word-grid" id="wordWithTranslationGrid"></div>
+            </div>
+
+            <div class="translation-result" id="translationResult">
+                <h3>📖 翻译结果</h3>
+                <div class="word-info" id="translationContent">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 词典管理类
+        class ReleaseDictionary {
+            constructor() {
+                this.dictionary = null;
+                this.isLoaded = false;
+                this.loadPromise = null;
+                
+                // 替换为你的实际GitHub Release URL
+                this.dictionaryUrl = 'https://github.com/rachelhanlj/sound-alike-words/releases/download/v1.0.0/complete-dictionary.json.gz';
+            }
+
+            async loadDictionary() {
+                if (this.loadPromise) {
+                    return this.loadPromise;
+                }
+
+                this.loadPromise = this._loadFromRelease();
+                return this.loadPromise;
+            }
+
+            async _loadFromRelease() {
+                const loadingElement = document.getElementById('dictionaryLoading');
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+                const statsElement = document.getElementById('dictionaryStats');
+                
+                try {
+                    progressText.textContent = '开始下载词典...';
+                    
+                    const response = await fetch(this.dictionaryUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const contentLength = +response.headers.get('Content-Length');
+                    const reader = response.body.getReader();
+                    
+                    let receivedLength = 0;
+                    let chunks = [];
+
+                    while(true) {
+                        const {done, value} = await reader.read();
+                        
+                        if (done) break;
+                        
+                        chunks.push(value);
+                        receivedLength += value.length;
+                        
+                        if (contentLength) {
+                            const progress = (receivedLength / contentLength * 100);
+                            progressFill.style.width = progress + '%';
+                            progressText.textContent = `下载进度: ${progress.toFixed(1)}% (${(receivedLength / 1024 / 1024).toFixed(1)} MB)`;
+                        }
+                    }
+
+                    progressText.textContent = '正在解压和解析词典数据...';
+                    progressFill.style.width = '100%';
+
+                    // 合并数据
+                    const allChunks = new Uint8Array(receivedLength);
+                    let position = 0;
+                    for(let chunk of chunks) {
+                        allChunks.set(chunk, position);
+                        position += chunk.length;
+                    }
+
+                    // 解压gzip数据
+                    const decompressed = await this.decompressGzip(allChunks);
+                    
+                    // 解析JSON
+                    this.dictionary = JSON.parse(decompressed);
+                    this.isLoaded = true;
+                    
+                    const wordCount = Object.keys(this.dictionary).length;
+                    
+                    // 隐藏加载界面，显示状态
+                    loadingElement.style.display = 'none';
+                    statsElement.style.display = 'block';
+                    document.getElementById('statsText').textContent = 
+                        `词典加载完成 | 词条数: ${wordCount.toLocaleString()} | 文件大小: ${(receivedLength / 1024 / 1024).toFixed(1)} MB`;
+                    
+                    console.log(`✅ 词典加载成功：${wordCount.toLocaleString()} 词条`);
+                    
+                } catch (error) {
+                    console.error('词典加载失败:', error);
+                    loadingElement.innerHTML = `
+                        <strong>❌ 词典加载失败</strong>
+                        <div>错误: ${error.message}</div>
+                        <div>💡 可能原因：网络连接问题或GitHub Release文件未上传</div>
+                        <button onclick="location.reload()" style="margin-top: 10px; padding: 10px 20px; background: #4facfe; color: white; border: none; border-radius: 5px; cursor: pointer;">重试</button>
+                    `;
+                }
+            }
+
+            async decompressGzip(data) {
+                // 使用浏览器的CompressionStream API解压
+                const stream = new Response(data).body
+                    .pipeThrough(new DecompressionStream('gzip'));
+                
+                const response = new Response(stream);
+                return await response.text();
+            }
+
+            async translate(word) {
+                if (!this.isLoaded) {
+                    await this.loadDictionary();
+                }
+
+                if (!this.dictionary) {
+                    return null;
+                }
+
+                return this.dictionary[word.toLowerCase()] || null;
+            }
+        }
+
+        // 音标数据库
+        const phoneticDatabase = {
+            'cognitive': {
+                modern: 'ˈkɒɡnɪtɪv',
+                traditional: 'ˈkɒɡnɪtɪv',
+                syllables: ['COG', 'ni', 'tive'],
+                similar: ['recognition', 'productive', 'protective', 'selective', 'collective', 'objective', 'subjective', 'effective', 'creative', 'innovative']
+            },
+            'productive': {
+                modern: 'prəˈdʌktɪv',
+                traditional: 'prəˈdʌktɪv',
+                syllables: ['pro', 'DUC', 'tive'],
+                similar: ['cognitive', 'constructive', 'destructive', 'instructive', 'reproductive', 'protective', 'selective', 'collective']
+            },
+            'organization': {
+                modern: 'ˌɔːɡənaɪˈzeɪʃən',
+                traditional: 'ˌɔːɡənaɪˈzeɪʃən',
+                syllables: ['OR', 'ga', 'ni', 'ZA', 'tion'],
+                similar: ['communication', 'information', 'education', 'administration', 'transportation', 'consideration', 'documentation', 'presentation']
+            },
+            'development': {
+                modern: 'dɪˈveləpmənt',
+                traditional: 'dɪˈveləpmənt',
+                syllables: ['de', 'VEL', 'op', 'ment'],
+                similar: ['management', 'government', 'environment', 'improvement', 'achievement', 'establishment', 'investment', 'movement']
+            },
+            'communication': {
+                modern: 'kəˌmjuːnɪˈkeɪʃən',
+                traditional: 'kəˌmjuːnɪˈkeɪʃən',
+                syllables: ['com', 'mu', 'ni', 'CA', 'tion'],
+                similar: ['organization', 'information', 'education', 'transportation', 'administration', 'documentation', 'presentation', 'demonstration']
+            }
+        };
+
+        // 扩展词汇库
+        const extendedVocabulary = [
+            'cognitive', 'recognition', 'productive', 'constructive', 'destructive', 'instructive', 'reproductive', 'protective', 'selective', 'collective', 'objective', 'subjective', 'effective', 'creative', 'innovative', 'competitive', 'cooperative', 'administrative', 'representative',
+            'organization', 'communication', 'information', 'education', 'administration', 'transportation', 'consideration', 'documentation', 'presentation', 'demonstration', 'recommendation', 'concentration', 'celebration', 'preparation',
+            'development', 'management', 'government', 'environment', 'improvement', 'achievement', 'establishment', 'investment', 'movement', 'agreement', 'requirement', 'treatment', 'statement', 'department', 'entertainment',
+            'technology', 'psychology', 'sociology', 'philosophy', 'methodology', 'terminology', 'archaeology', 'biology', 'geology', 'ecology', 'economy', 'astronomy', 'anatomy', 'democracy', 'diplomacy'
+        ];
+
+        // 全局变量
+        let currentTab = 'phonetic';
+        const releaseDictionary = new ReleaseDictionary();
+
+        // 标签页切换
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            currentTab = tabName;
+            clearAllResults();
+        }
+
+        // 清理所有结果
+        function clearAllResults() {
+            document.getElementById('phoneticInfo').style.display = 'none';
+            document.getElementById('similarWords').style.display = 'none';
+            document.getElementById('translationResult').style.display = 'none';
+            document.getElementById('phoneticErrorMessage').style.display = 'none';
+            document.getElementById('translationErrorMessage').style.display = 'none';
+        }
+
+        // 智能搜索功能
+        async function searchSimilarWords() {
+            const searchInput = document.getElementById('phoneticSearchInput');
+            const word = searchInput.value.trim().toLowerCase();
+            
+            if (!word) {
+                showError('请输入一个英语单词', 'phonetic');
+                return;
+            }
+
+            showLoading(true, '正在搜索近音词和翻译...');
+            hideError('phonetic');
+
+            try {
+                // 检查音标数据库
+                if (phoneticDatabase[word]) {
+                    await displayPhoneticResultsWithTranslation(word, phoneticDatabase[word]);
+                } else {
+                    // 生成相似词
+                    const similarWords = generateSimilarWords(word);
+                    const phoneticData = {
+                        modern: generatePhonetic(word),
+                        traditional: generatePhonetic(word),
+                        syllables: generateSyllables(word),
+                        similar: similarWords
+                    };
+                    await displayPhoneticResultsWithTranslation(word, phoneticData);
+                }
+            } catch (error) {
+                showError('搜索过程中出现错误，请稍后重试', 'phonetic');
+                console.error('Search error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function displayPhoneticResultsWithTranslation(word, data) {
+            // 显示音标信息
+            const phoneticInfo = document.getElementById('phoneticInfo');
+            const phoneticTranscription = document.getElementById('phoneticTranscription');
+            
+            phoneticTranscription.innerHTML = `
+                <li><span class="bold">Modern IPA:</span> ${data.modern}</li>
+                <li><span class="bold">Traditional IPA:</span> ${data.traditional}</li>
+                <li><span class="bold">${data.syllables.length} syllables:</span>
+                    <div class="syllables">
+                        ${data.syllables.map(syllable => `"${syllable}"`).join(' + ')}
+                    </div>
+                </li>
+            `;
+            
+            phoneticInfo.style.display = 'block';
+
+            // 显示带翻译的近音词
+            const similarWords = document.getElementById('similarWords');
+            const wordGrid = document.getElementById('wordWithTranslationGrid');
+            
+            let gridHtml = '';
+            
+            // 搜索词本身
+            const mainTranslation = await getTranslation(word);
+            gridHtml += `
+                <div class="word-with-translation">
+                    <div class="main-word">${word} <span style="font-size: 14px; color: #666;">(搜索词)</span></div>
+                    <div class="main-translation ${mainTranslation ? '' : 'no-translation'}">
+                        ${mainTranslation || '暂无翻译'}
+                    </div>
+                </div>
+            `;
+
+            // 近音词及翻译
+            for (const similarWord of data.similar) {
+                const translation = await getTranslation(similarWord);
+                gridHtml += `
+                    <div class="word-with-translation" onclick="searchTranslationExample('${similarWord}')">
+                        <div class="main-word">${similarWord}</div>
+                        <div class="main-translation ${translation ? '' : 'no-translation'}">
+                            ${translation || '暂无翻译'}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            wordGrid.innerHTML = gridHtml;
+            similarWords.style.display = 'block';
+        }
+
+        // 翻译功能
+        async function searchTranslation() {
+            const searchInput = document.getElementById('translationSearchInput');
+            const word = searchInput.value.trim().toLowerCase();
+            
+            if (!word) {
+                showError('请输入一个英语单词', 'translation');
+                return;
+            }
+
+            showLoading(true, '正在查询翻译...');
+            hideError('translation');
+
+            try {
+                const translation = await getTranslation(word);
+                
+                if (translation) {
+                    displayTranslationResult(word, translation);
+                } else {
+                    showError(`未找到单词 "${word}" 的翻译，请检查拼写`, 'translation');
+                }
+            } catch (error) {
+                console.error('Translation error:', error);
+                showError('翻译查询失败，请稍后重试', 'translation');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function getTranslation(word) {
+            try {
+                return await releaseDictionary.translate(word);
+            } catch (error) {
+                console.error('翻译查询错误:', error);
+                return null;
+            }
+        }
+
+        function displayTranslationResult(word, translation) {
+            const translationResult = document.getElementById('translationResult');
+            const translationContent = document.getElementById('translationContent');
+            
+            translationContent.innerHTML = `
+                <div class="word-entry">
+                    <div class="word-title">${word}</div>
+                    <div class="word-translation">${translation}</div>
+                </div>
+            `;
+            
+            translationResult.style.display = 'block';
+        }
+
+        // 音标和相似词生成函数（保持原有逻辑）
+        function generatePhonetic(word) {
+            const vowelMap = {
+                'a': 'æ', 'e': 'ɛ', 'i': 'ɪ', 'o': 'ɒ', 'u': 'ʌ'
+            };
+            
+            let phonetic = '';
+            for (let char of word) {
+                if (vowelMap[char]) {
+                    phonetic += vowelMap[char];
+                } else {
+                    phonetic += char;
+                }
+            }
+            return phonetic;
+        }
+
+        function generateSyllables(word) {
+            const syllables = [];
+            let currentSyllable = '';
+            
+            for (let i = 0; i < word.length; i++) {
+                currentSyllable += word[i];
+                if (isVowel(word[i]) && i < word.length - 1 && !isVowel(word[i + 1])) {
+                    syllables.push(currentSyllable.toUpperCase());
+                    currentSyllable = '';
+                }
+            }
+            
+            if (currentSyllable) {
+                syllables.push(currentSyllable.toLowerCase());
+            }
+            
+            return syllables.length > 0 ? syllables : [word.toUpperCase()];
+        }
+
+        function isVowel(char) {
+            return 'aeiou'.includes(char.toLowerCase());
+        }
+
+        function generateSimilarWords(word) {
+            const similar = [];
+            
+            extendedVocabulary.forEach(vocabWord => {
+                if (vocabWord === word) return;
+                
+                const similarity = calculateSimilarity(word, vocabWord);
+                if (similarity > 0.3) {
+                    similar.push(vocabWord);
+                }
+            });
+            
+            return similar
+                .sort((a, b) => calculateSimilarity(word, b) - calculateSimilarity(word, a))
+                .slice(0, 15);
+        }
+
+        function calculateSimilarity(word1, word2) {
+            let similarity = 0;
+            
+            const lengthSimilarity = 1 - Math.abs(word1.length - word2.length) / Math.max(word1.length, word2.length);
+            similarity += lengthSimilarity * 0.2;
+            
+            const prefixLength = Math.min(3, Math.min(word1.length, word2.length));
+            let prefixMatch = 0;
+            for (let i = 0; i < prefixLength; i++) {
+                if (word1[i].toLowerCase() === word2[i].toLowerCase()) {
+                    prefixMatch++;
+                }
+            }
+            similarity += (prefixMatch / prefixLength) * 0.3;
+            
+            const suffixLength = Math.min(4, Math.min(word1.length, word2.length));
+            let suffixMatch = 0;
+            for (let i = 0; i < suffixLength; i++) {
+                const pos1 = word1.length - 1 - i;
+                const pos2 = word2.length - 1 - i;
+                if (word1[pos1].toLowerCase() === word2[pos2].toLowerCase()) {
+                    suffixMatch++;
+                }
+            }
+            similarity += (suffixMatch / suffixLength) * 0.3;
+            
+            const editSimilarity = 1 - editDistance(word1, word2) / Math.max(word1.length, word2.length);
+            similarity += editSimilarity * 0.2;
+            
+            return similarity;
+        }
+
+        function editDistance(str1, str2) {
+            const matrix = Array(str2.length + 1).fill().map(() => Array(str1.length + 1).fill(0));
+            
+            for (let i = 0; i <= str1.length; i++) matrix[0][i] = i;
+            for (let j = 0; j <= str2.length; j++) matrix[j][0] = j;
+            
+            for (let j = 1; j <= str2.length; j++) {
+                for (let i = 1; i <= str1.length; i++) {
+                    if (str1[i - 1] === str2[j - 1]) {
+                        matrix[j][i] = matrix[j - 1][i - 1];
+                    } else {
+                        matrix[j][i] = Math.min(
+                            matrix[j - 1][i - 1] + 1,
+                            matrix[j][i - 1] + 1,
+                            matrix[j - 1][i] + 1
+                        );
+                    }
+                }
+            }
+            
+            return matrix[str2.length][str1.length];
+        }
+
+        // 通用功能
+        function showLoading(show, text = '正在搜索...') {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('loadingText').textContent = text;
+            
+            document.querySelectorAll('.search-input').forEach(input => input.disabled = show);
+            document.querySelectorAll('.search-btn').forEach(btn => btn.disabled = show);
+        }
+
+        function showError(message, type = 'phonetic') {
+            const errorElement = document.getElementById(type + 'ErrorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+
+        function hideError(type = 'phonetic') {
+            document.getElementById(type + 'ErrorMessage').style.display = 'none';
+        }
+
+        function searchPhoneticExample(word) {
+            if (currentTab !== 'phonetic') {
+                switchTab('phonetic');
+                document.querySelector('.tab').click();
+            }
+            
+            document.getElementById('phoneticSearchInput').value = word;
+            searchSimilarWords();
+        }
+
+        function searchTranslationExample(word) {
+            if (currentTab !== 'translation') {
+                switchTab('translation');
+                document.querySelectorAll('.tab')[1].click();
+            }
+            
+            document.getElementById('translationSearchInput').value = word;
+            searchTranslation();
+        }
+
+        // 回车搜索
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('phoneticSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchSimilarWords();
+                }
+            });
+
+            document.getElementById('translationSearchInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    searchTranslation();
+                }
+            });
+        });
+
+        // 页面加载时自动开始加载词典
+        window.addEventListener('load', function() {
+            releaseDictionary.loadDictionary();
+        });
+    </script>
+</body>
+</html>
