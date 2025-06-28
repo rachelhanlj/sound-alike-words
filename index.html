@@ -793,7 +793,33 @@
 
         async function getTranslation(word) {
             try {
-                return await releaseDictionary.translate(word);
+                if (!releaseDictionary.dictionary) {
+                    await releaseDictionary.loadDictionary();
+                }
+                
+                const dict = releaseDictionary.dictionary;
+                if (!dict) return null;
+                
+                // 正确的查找顺序（基于实际数据格式）
+                const searchKeys = [
+                    word + "'",              // good' - 主要格式！
+                    "'" + word,              // 'good
+                    word,                    // good (原格式)
+                    word.toLowerCase() + "'", // good'（小写）
+                    "'" + word.toLowerCase(), // 'good（小写）
+                    word.toLowerCase(),       // good（小写）
+                ];
+                
+                for (const key of searchKeys) {
+                    if (dict.hasOwnProperty(key)) {
+                        console.log(`找到翻译: ${word} -> ${key} -> ${dict[key].substring(0, 50)}...`);
+                        return dict[key];
+                    }
+                }
+                
+                console.log(`未找到翻译: ${word}`);
+                return null;
+                
             } catch (error) {
                 console.error('翻译查询错误:', error);
                 return null;
